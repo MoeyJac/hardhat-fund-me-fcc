@@ -17,9 +17,12 @@ contract FundMe {
     mapping(address => uint256) public addressToAmountFunded;
 
     address public immutable i_owner;
+
+    AggregatorV3Interface public priceFeed;
     
-    constructor(){
+    constructor(address _priceFeed){
         i_owner = msg.sender;
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     modifier onlyOwner(){
@@ -30,7 +33,7 @@ contract FundMe {
 
     function fund() public payable {
         // Want to be able to specify a minimum amount for deposit
-         require(msg.value.getConversionRate() >= MINIMUM_USD, "Didnt meet minimum deposit amount");
+         require(msg.value.getConversionRate(priceFeed) >= MINIMUM_USD, "Didnt meet minimum deposit amount");
          funders.push(msg.sender);
          addressToAmountFunded[msg.sender] += msg.value;
     }
