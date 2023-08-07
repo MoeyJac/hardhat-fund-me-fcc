@@ -2,12 +2,16 @@ const { deployments, ethers, getNamedAccounts } = require("hardhat")
 const { assert, expect } = require("chai")
 describe("FundMe", async function () {
     let fundMe
-    let deployer
     let mockV3Aggregator
+    let deployer
+    let signer
     const sendValue = ethers.parseUnits("1", "ether")
+
     beforeEach(async function () {
         deployer = (await getNamedAccounts()).deployer
-        await deployments.fixture(["all"])
+        signer = await ethers.provider.getSigner()
+
+        fundMe = await deployments.fixture(["all"])
         const fundMeContract = await deployments.get("FundMe")
         const mockV3AggregatorContract = await deployments.get(
             "MockV3Aggregator"
@@ -15,12 +19,14 @@ describe("FundMe", async function () {
 
         fundMe = await ethers.getContractAt(
             fundMeContract.abi,
-            fundMeContract.address
+            fundMeContract.address,
+            signer
         )
 
         mockV3Aggregator = await ethers.getContractAt(
             mockV3AggregatorContract.abi,
-            mockV3AggregatorContract.address
+            mockV3AggregatorContract.address,
+            signer
         )
     })
 
@@ -112,7 +118,7 @@ describe("FundMe", async function () {
         })
 
         it("Should only allow owner to withdraw", async function () {
-            const accounts = ethers.getSigners()
+            const accounts = await ethers.getSigners()
             const attacker = accounts[1]
             const attackerConnectedContract = await fundMe.connect(attacker)
             await expect(attackerConnectedContract.withdraw()).to.be.reverted
