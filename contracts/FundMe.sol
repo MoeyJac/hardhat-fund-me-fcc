@@ -19,12 +19,12 @@ contract FundMe {
 
     uint256 public constant MINIMUM_USD = 50 * 1e18;
 
-    address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+    address[] private s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
 
-    address public immutable i_owner;
+    address private immutable i_owner;
 
-    AggregatorV3Interface public priceFeed;
+    AggregatorV3Interface private s_priceFeed;
 
     modifier onlyOwner(){
         // require(i_owner == msg.sender, "Sender is not the owner.");
@@ -34,7 +34,7 @@ contract FundMe {
     
     constructor(address _priceFeed){
         i_owner = msg.sender;
-        priceFeed = AggregatorV3Interface(_priceFeed);
+        s_priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     // What happens if someone sens this contract ETH without calling the fund function?
@@ -57,9 +57,9 @@ contract FundMe {
      */
     function fund() public payable {
         // Want to be able to specify a minimum amount for deposit
-         require(msg.value.getConversionRate(priceFeed) >= MINIMUM_USD, "Didnt meet minimum deposit amount");
-         funders.push(msg.sender);
-         addressToAmountFunded[msg.sender] += msg.value;
+         require(msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD, "Didnt meet minimum deposit amount");
+         s_funders.push(msg.sender);
+         s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
     /**
@@ -67,13 +67,13 @@ contract FundMe {
      * the contract
      */
     function withdraw() public onlyOwner() {
-        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++){
-            address funder = funders[funderIndex];
+        for (uint256 funderIndex = 0; funderIndex < s_funders.length; funderIndex++){
+            address funder = s_funders[funderIndex];
             // Reset funder amount to 0
-            addressToAmountFunded[funder] = 0;
+            s_addressToAmountFunded[funder] = 0;
         }
         // Reset the funders list
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         // Withdraw funds
 
@@ -90,6 +90,37 @@ contract FundMe {
         // most used function to transfer ethereum 
         (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
         require(callSuccess, "Call failed");
+    }
+
+    function cheaperWithdraw() public payable onlyOwner {
+        address[] memory funders = s_funders;
+
+        for(uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++){
+            address funder = funders[funderIndex];
+            s_addressToAmountFunded[funder] = 0;
+        }
+
+        s_funders = new address[](0);
+
+        (bool success, ) = i_owner.call{value: address(this).balance}("");
+        require(success);
+
+    }
+
+    function getOwner() public view returns(address){
+        return i_owner;
+    }
+
+    function getFunder(uint256 index) public view returns(address){
+        return s_funders[index];
+    }
+
+    function getAddressToAmountFunded(address funder) public view returns(uint256){
+        return s_addressToAmountFunded[funder];
+    }
+
+    function getPriceFeed() public view returns(AggregatorV3Interface){
+        return s_priceFeed;
     }
 
 }
