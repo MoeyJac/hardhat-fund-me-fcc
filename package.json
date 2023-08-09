@@ -1,4 +1,7 @@
 {
+  "name": "Hardhat-fund-me-fcc",
+  "author": "moeyjac",
+  "version": "1.0.0",
   "license": "MIT",
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
