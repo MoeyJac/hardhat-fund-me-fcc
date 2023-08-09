@@ -25,6 +25,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
         log: true,
         waitConfirmations: network.config.blockConfirmations || 1,
     })
+    log("FundMe deployed!")
     log("---------------------------------------------")
 
     if (
