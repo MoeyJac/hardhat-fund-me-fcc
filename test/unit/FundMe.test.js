@@ -4,11 +4,11 @@ const { developmentChains } = require("../../helper-hardhat-config")
 
 !developmentChains.includes(network.name)
     ? describe.skip
-    : describe("FundMe", async function () {
+    : describe("FundMe Dev", async function () {
           let fundMe
           let mockV3Aggregator
           let deployer
-          const sendValue = ethers.parseUnits("1", "ether")
+          const sendValue = ethers.parseUnits(".1", "ether")
 
           beforeEach(async function () {
               deployer = (await getNamedAccounts()).deployer
